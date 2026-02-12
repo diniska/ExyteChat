@@ -49,14 +49,15 @@ struct UIList<MessageContent: View, InputView: View>: UIViewRepresentable {
     @State var isScrolledToTop = false
     @State var updateQueue = UpdateQueue()
 
-    func makeUIView(context: Context) -> UITableView {
-        let tableView = UITableView(frame: .zero, style: .grouped)
+    func makeUIView(context: Context) -> MessageBuilderTableView {
+        let tableView = MessageBuilderTableView(frame: .zero, style: .grouped)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.separatorStyle = .none
         tableView.dataSource = context.coordinator
         tableView.delegate = context.coordinator
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         tableView.transform = CGAffineTransform(rotationAngle: (type == .conversation ? .pi : 0))
+        tableView.messageBuilder = messageBuilder
 
         tableView.showsVerticalScrollIndicator = false
         tableView.estimatedSectionHeaderHeight = 1
@@ -84,7 +85,8 @@ struct UIList<MessageContent: View, InputView: View>: UIViewRepresentable {
         return tableView
     }
 
-    func updateUIView(_ tableView: UITableView, context: Context) {
+    func updateUIView(_ tableView: MessageBuilderTableView, context: Context) {
+        tableView.messageBuilder = messageBuilder
         if !isScrollEnabled {
             DispatchQueue.main.async {
                 tableContentHeight = tableView.contentSize.height
@@ -366,8 +368,8 @@ struct UIList<MessageContent: View, InputView: View>: UIViewRepresentable {
         Coordinator(
             viewModel: viewModel, inputViewModel: inputViewModel,
             isScrolledToBottom: $isScrolledToBottom, isScrolledToTop: $isScrolledToTop,
-            messageBuilder: messageBuilder, mainHeaderBuilder: mainHeaderBuilder,
-            headerBuilder: headerBuilder, type: type, showDateHeaders: showDateHeaders,
+            mainHeaderBuilder: mainHeaderBuilder, headerBuilder: headerBuilder,
+            type: type, showDateHeaders: showDateHeaders,
             avatarSize: avatarSize, showMessageMenuOnLongPress: showMessageMenuOnLongPress,
             tapAvatarClosure: tapAvatarClosure, paginationHandler: paginationHandler,
             messageStyler: messageStyler, shouldShowLinkPreview: shouldShowLinkPreview,
@@ -386,7 +388,6 @@ struct UIList<MessageContent: View, InputView: View>: UIViewRepresentable {
         @Binding var isScrolledToBottom: Bool
         @Binding var isScrolledToTop: Bool
 
-        let messageBuilder: MessageBuilderClosure?
         let mainHeaderBuilder: (()->AnyView)?
         let headerBuilder: ((Date)->AnyView)?
 
@@ -418,8 +419,8 @@ struct UIList<MessageContent: View, InputView: View>: UIViewRepresentable {
         init(
             viewModel: ChatViewModel, inputViewModel: InputViewModel,
             isScrolledToBottom: Binding<Bool>, isScrolledToTop: Binding<Bool>,
-            messageBuilder: MessageBuilderClosure?, mainHeaderBuilder: (() -> AnyView)?,
-            headerBuilder: ((Date) -> AnyView)?, type: ChatType, showDateHeaders: Bool,
+            mainHeaderBuilder: (() -> AnyView)?, headerBuilder: ((Date) -> AnyView)?,
+            type: ChatType, showDateHeaders: Bool,
             avatarSize: CGFloat, showMessageMenuOnLongPress: Bool,
             tapAvatarClosure: ChatView.TapAvatarClosure?, paginationHandler: PaginationHandler?,
             messageStyler: @escaping (String) -> AttributedString,
@@ -432,7 +433,6 @@ struct UIList<MessageContent: View, InputView: View>: UIViewRepresentable {
             self.inputViewModel = inputViewModel
             self._isScrolledToBottom = isScrolledToBottom
             self._isScrolledToTop = isScrolledToTop
-            self.messageBuilder = messageBuilder
             self.mainHeaderBuilder = mainHeaderBuilder
             self.headerBuilder = headerBuilder
             self.type = type
@@ -572,6 +572,7 @@ struct UIList<MessageContent: View, InputView: View>: UIViewRepresentable {
             tableViewCell.backgroundColor = UIColor(mainBackgroundColor)
 
             let row = sections[indexPath.section].rows[indexPath.row]
+            let messageBuilder = (tableView as? MessageBuilderTableView)?.messageBuilder
             tableViewCell.contentConfiguration = UIHostingConfiguration {
                 ChatMessageView(
                     viewModel: viewModel, messageBuilder: messageBuilder, row: row, chatType: type,
@@ -635,6 +636,12 @@ struct UIList<MessageContent: View, InputView: View>: UIViewRepresentable {
         }
         res += String("}")
         return res
+    }
+}
+
+extension UIList {
+    final class MessageBuilderTableView: UITableView {
+        var messageBuilder: MessageBuilderClosure?
     }
 }
 
