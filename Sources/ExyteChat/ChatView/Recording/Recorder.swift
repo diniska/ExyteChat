@@ -8,27 +8,29 @@
 import Foundation
 import AVFoundation
 
-final class Recorder {
+public final class Recorder {
 
     // duration and waveform samples
-    typealias ProgressHandler = (Double, [CGFloat]) -> Void
+    public typealias ProgressHandler = (Double, [CGFloat]) -> Void
 
     private let audioSession = AVAudioSession()
     private var audioRecorder: AVAudioRecorder?
     private var audioTimer: Timer?
 
     private var soundSamples: [CGFloat] = []
-    internal var recorderSettings = RecorderSettings()
+    public var recorderSettings = RecorderSettings()
 
-    var isAllowedToRecordAudio: Bool {
+    public var isAllowedToRecordAudio: Bool {
         audioSession.recordPermission == .granted
     }
 
-    var isRecording: Bool {
+    public var isRecording: Bool {
         audioRecorder?.isRecording ?? false
     }
 
-    func startRecording(durationProgressHandler: @escaping ProgressHandler) async -> URL? {
+    public init() {}
+
+    public func startRecording(durationProgressHandler: @escaping ProgressHandler) async -> URL? {
         if !isAllowedToRecordAudio {
             let granted = await audioSession.requestRecordPermission()
             if granted {
@@ -80,7 +82,7 @@ final class Recorder {
         }
     }
 
-    func onTimer(_ durationProgressHandler: @escaping ProgressHandler) {
+    private func onTimer(_ durationProgressHandler: @escaping ProgressHandler) {
         audioRecorder?.updateMeters()
         if let power = audioRecorder?.averagePower(forChannel: 0) {
             // power from 0 db (max) to -60 db (roughly min)
@@ -92,7 +94,7 @@ final class Recorder {
         }
     }
 
-    func stopRecording() {
+    public func stopRecording() {
         audioRecorder?.stop()
         audioRecorder = nil
         audioTimer?.invalidate()

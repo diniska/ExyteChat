@@ -8,28 +8,28 @@
 import Combine
 import AVFoundation
 
-final class RecordingPlayer: ObservableObject {
+public final class RecordingPlayer: ObservableObject {
 
-    @Published var playing = false
-    @Published var duration: Double = 0.0
-    @Published var secondsLeft: Double = 0.0
-    @Published var progress: Double = 0.0
+    @Published public var playing = false
+    @Published public var duration: Double = 0.0
+    @Published public var secondsLeft: Double = 0.0
+    @Published public var progress: Double = 0.0
 
     private let audioSession = AVAudioSession()
 
-    var didPlayTillEnd = PassthroughSubject<Void, Never>()
+    public var didPlayTillEnd = PassthroughSubject<Void, Never>()
 
     private var recording: Recording?
 
     private var player: AVPlayer?
     private var timeObserver: Any?
 
-    init() {
+    public init() {
         try? audioSession.setCategory(.playback)
         try? audioSession.overrideOutputAudioPort(.speaker)
     }
 
-    func play(_ recording: Recording) {
+    public func play(_ recording: Recording) {
         self.recording = recording
         if let url = recording.url {
             setupPlayer(for: url, trackDuration: recording.duration)
@@ -37,12 +37,12 @@ final class RecordingPlayer: ObservableObject {
         }
     }
 
-    func pause() {
+    public func pause() {
         player?.pause()
         playing = false
     }
 
-    func togglePlay(_ recording: Recording) {
+    public func togglePlay(_ recording: Recording) {
         if self.recording?.url != recording.url {
             self.recording = recording
             if let url = recording.url {
@@ -53,7 +53,7 @@ final class RecordingPlayer: ObservableObject {
         else { play() }
     }
 
-    func seek(with recording: Recording, to progress: Double) {
+    public func seek(with recording: Recording, to progress: Double) {
         let goalTime = recording.duration * progress
         if self.recording == nil {
             self.recording = recording
@@ -74,13 +74,13 @@ final class RecordingPlayer: ObservableObject {
         }
     }
 
-    func seek(to progress: Double) {
+    public func seek(to progress: Double) {
         let goalTime = duration * progress
         player?.seek(to: CMTime(seconds: goalTime, preferredTimescale: 10))
         if !playing { play() }
     }
 
-    func reset() {
+    public func reset() {
         if playing {
             pause()
         }

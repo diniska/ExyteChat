@@ -152,16 +152,21 @@ struct RecordWaveformPlaying: View {
     }
 }
 
-struct RecordWaveform: View {
+public struct RecordWaveform: View {
 
     var samples: [CGFloat] // 0...1
     var addExtraDots: Bool
 
-    static let spacing: CGFloat = 2
-    static let width: CGFloat = 2
-    static let maxSampleHeight: CGFloat = 20
+    public static let spacing: CGFloat = 2
+    public static let width: CGFloat = 2
+    public static let maxSampleHeight: CGFloat = 20
 
-    var body: some View {
+    public init(samples: [CGFloat], addExtraDots: Bool) {
+        self.samples = samples
+        self.addExtraDots = addExtraDots
+    }
+
+    public var body: some View {
         GeometryReader { g in
             HStack(alignment: .bottom, spacing: RecordWaveform.spacing) {
                 ForEach(Array(samples.enumerated()), id: \.offset) { _, s in

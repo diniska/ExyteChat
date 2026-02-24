@@ -7,11 +7,13 @@
 
 import SwiftUI
 
-struct RecordIndicator: View {
+public struct RecordIndicator: View {
 
     let count = 2
 
-    var body: some View {
+    public init() {}
+
+    public var body: some View {
         let animation = Animation
             .linear(duration: 1)
             .repeatForever(autoreverses: false)
