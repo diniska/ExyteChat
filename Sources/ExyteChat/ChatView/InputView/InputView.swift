@@ -73,10 +73,17 @@ public enum AvailableInputType {
 }
 
 public struct InputViewAttachments {
-  public var medias: [Media] = []
-  public var recording: Recording?
-  public var giphyMedia: GPHMedia?
-  public var replyMessage: ReplyMessage?
+    public var medias: [Media]
+    public var recording: Recording?
+    public var giphyMedia: GPHMedia?
+    public var replyMessage: ReplyMessage?
+    
+    public init(medias: [Media] = [], recording: Recording? = nil, giphyMedia: GPHMedia? = nil, replyMessage: ReplyMessage? = nil) {
+        self.medias = medias
+        self.recording = recording
+        self.giphyMedia = giphyMedia
+        self.replyMessage = replyMessage
+    }
 }
 
 struct InputView: View {
