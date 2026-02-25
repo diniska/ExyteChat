@@ -125,7 +125,7 @@ struct AttachmentsEditor<InputViewContent: View>: View {
         Group {
             if let inputViewBuilder = inputViewBuilder {
                 inputViewBuilder(
-                    $inputViewModel.text, inputViewModel.attachments, inputViewModel.state,
+                    $inputViewModel.text, $inputViewModel.attachments, inputViewModel.state,
                     .signature, inputViewModel.inputViewAction()
                 ) {
                     globalFocusState.focus = nil

@@ -49,7 +49,7 @@ public struct ChatView<MessageContent: View, InputViewContent: View, MenuAction:
     /// - dismiss keyboard closure
     public typealias InputViewBuilderClosure = (
         _ text: Binding<String>,
-        _ attachments: InputViewAttachments,
+        _ attachments: Binding<InputViewAttachments>,
         _ inputViewState: InputViewState,
         _ inputViewStyle: InputViewStyle,
         _ inputViewActionClosure: @escaping (InputViewAction) -> Void,
@@ -379,7 +379,7 @@ public struct ChatView<MessageContent: View, InputViewContent: View, MenuAction:
     var inputView: some View {
         Group {
             if let inputViewBuilder = inputViewBuilder {
-                inputViewBuilder($inputViewModel.text, inputViewModel.attachments, inputViewModel.state, .message, inputViewModel.inputViewAction()) {
+                inputViewBuilder($inputViewModel.text, $inputViewModel.attachments, inputViewModel.state, .message, inputViewModel.inputViewAction()) {
                     globalFocusState.focus = nil
                 }
             } else {
