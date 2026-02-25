@@ -182,6 +182,15 @@ public struct RecordWaveform: View {
             }
             .frame(height: geometry.size.height)
         }
-        .fixedSize(horizontal: !addExtraDots, vertical: true)
+        .fixedSize(horizontal: !addExtraDots, vertical: false)
     }
+}
+
+#Preview {
+    RecordWaveform(
+        samples: (-50 ..< 50).map {
+            1 / Double(max(1, abs($0)))
+        },
+        addExtraDots: true,
+        alignment: .center)
 }
