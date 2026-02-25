@@ -90,22 +90,20 @@ struct RecordWaveformPlaying: View {
     }
 
     var body: some View {
-        GeometryReader { g in
+        GeometryReader { geometry in
             ZStack {
-                let adjusted = addExtraDots ? adjustedSamples(g.size.width) : adjustedSamples
+                let adjusted = addExtraDots ? adjustedSamples(geometry.size.width) : adjustedSamples
                 RecordWaveform(samples: adjusted, addExtraDots: addExtraDots)
                     .foregroundColor(color.opacity(0.4))
                 RecordWaveform(samples: adjusted, addExtraDots: addExtraDots)
                     .foregroundColor(color)
                     .mask(alignment: .leading) {
                         Rectangle()
-                            .frame(width: maxLength * progress, height: 2*RecordWaveform.maxSampleHeight)
+                            .frame(width: maxLength * progress, height: 2 * geometry.size.height)
                     }
             }
-            .frame(height: RecordWaveform.maxSampleHeight)
-            
+            .frame(height: geometry.size.height)
         }
-        .frame(height: RecordWaveform.maxSampleHeight)
         .applyIf(!addExtraDots) {
             $0.frame(width: maxLength)
         }
@@ -156,24 +154,25 @@ public struct RecordWaveform: View {
 
     var samples: [CGFloat] // 0...1
     var addExtraDots: Bool
+    var alignment: VerticalAlignment
 
     public static let spacing: CGFloat = 2
     public static let width: CGFloat = 2
-    public static let maxSampleHeight: CGFloat = 20
 
-    public init(samples: [CGFloat], addExtraDots: Bool) {
+    public init(samples: [CGFloat], addExtraDots: Bool, alignment: VerticalAlignment = .bottom) {
         self.samples = samples
         self.addExtraDots = addExtraDots
+        self.alignment = alignment
     }
 
     public var body: some View {
-        GeometryReader { g in
-            HStack(alignment: .bottom, spacing: RecordWaveform.spacing) {
+        GeometryReader { geometry in
+            HStack(alignment: alignment, spacing: RecordWaveform.spacing) {
                 ForEach(Array(samples.enumerated()), id: \.offset) { _, s in
                     Capsule()
-                        .frame(width: RecordWaveform.width, height: RecordWaveform.maxSampleHeight * CGFloat(s))
+                        .frame(width: RecordWaveform.width, height: geometry.size.height * CGFloat(s))
                 }
-                let maxSampleCounts = Int((g.size.width) / (RecordWaveform.width + RecordWaveform.spacing))
+                let maxSampleCounts = Int((geometry.size.width) / (RecordWaveform.width + RecordWaveform.spacing))
                 if addExtraDots && samples.count < maxSampleCounts {
                     ForEach(samples.count..<maxSampleCounts, id: \.self) { _ in
                         Capsule()
@@ -181,9 +180,8 @@ public struct RecordWaveform: View {
                     }
                 }
             }
-            .frame(height: RecordWaveform.maxSampleHeight)
+            .frame(height: geometry.size.height)
         }
-        .frame(height: RecordWaveform.maxSampleHeight)
         .fixedSize(horizontal: !addExtraDots, vertical: true)
     }
 }
