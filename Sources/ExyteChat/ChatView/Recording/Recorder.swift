@@ -10,7 +10,7 @@ import AVFoundation
 
 public final class Recorder {
 
-    public struct AudioSample: Codable, Equatable, Hashable {
+    public nonisolated struct AudioSample: Codable, Equatable, Hashable {
         public var averagePower: CGFloat
         public var peakPower: CGFloat
 
