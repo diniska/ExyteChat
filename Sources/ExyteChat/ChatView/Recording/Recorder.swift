@@ -29,13 +29,14 @@ public final class Recorder {
     }
     
     // duration and waveform samples
-    public typealias ProgressHandler = (Double, AudioSample) -> Void
+    public typealias ProgressHandler = (Double, [AudioSample]) -> Void
 
     private let audioSession = AVAudioSession()
     private var audioRecorder: AVAudioRecorder?
     private var audioTimer: Timer?
 
     public var recorderSettings = RecorderSettings()
+    private var soundSamples: [AudioSample] = []
     public var audioSamplingConfiguration = AudioSamplingConfiguraion()
 
     public var isAllowedToRecordAudio: Bool {
@@ -73,6 +74,7 @@ public final class Recorder {
             AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
         ]
 
+        soundSamples = []
         guard let fileExt = fileExtension(for: recorderSettings.audioFormatID) else{
             return nil
         }
@@ -84,7 +86,7 @@ public final class Recorder {
             audioRecorder = try AVAudioRecorder(url: recordingUrl, settings: settings)
             audioRecorder?.isMeteringEnabled = true
             audioRecorder?.record()
-            durationProgressHandler(0.0, AudioSample(averagePower: 0, peakPower: 0))
+            durationProgressHandler(0.0, [])
 
             DispatchQueue.main.async { [weak self] in
                 self?.audioTimer = Timer.scheduledTimer(withTimeInterval: self?.audioSamplingConfiguration.sampleTimeInterval ?? 1, repeats: true) { _ in
@@ -100,18 +102,26 @@ public final class Recorder {
     }
 
     private func onTimer(_ durationProgressHandler: @escaping ProgressHandler) {
-        audioRecorder?.updateMeters()
-        if let time = audioRecorder?.currentTime {
-            let averagePower = audioRecorder?.averagePower(forChannel: 0) ?? 0
-            let peakPower = audioRecorder?.peakPower(forChannel: 0) ?? 0
-            durationProgressHandler(
-                time,
-                AudioSample(
-                    averagePower: adjustedPower(from: averagePower),
-                    peakPower: adjustedPower(from: peakPower)
-                )
-            )
-        }
+        guard let audioRecorder
+        else { return }
+        
+        audioRecorder.updateMeters()
+        let time = audioRecorder.currentTime
+        
+        let power: SIMD2<Float> = [
+            audioRecorder.averagePower(forChannel: 0),
+            audioRecorder.peakPower(forChannel: 0)
+        ]
+        
+        // Power is from 0 db (max) to -60 db (roughly min).
+        let normalizedPower = 1 - (max(power, -60) / 60 * -1)
+        
+        soundSamples.append(AudioSample(
+            averagePower: CGFloat(normalizedPower.x),
+            peakPower: CGFloat(normalizedPower.y)
+        ))
+        
+        durationProgressHandler(time, soundSamples)
     }
 
     public func stopRecording() {
@@ -119,12 +129,6 @@ public final class Recorder {
         audioRecorder = nil
         audioTimer?.invalidate()
         audioTimer = nil
-    }
-
-    private func adjustedPower(from averagePower: Float) -> CGFloat {
-        // Power is from 0 db (max) to -60 db (roughly min).
-        let normalizedPower = 1 - (max(averagePower, -60) / 60 * -1)
-        return CGFloat(normalizedPower)
     }
 
     private func fileExtension(for formatID: AudioFormatID) -> String? {

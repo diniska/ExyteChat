@@ -128,9 +128,9 @@ final class InputViewModel: ObservableObject {
         }
         Task { @MainActor in
             attachments.recording = Recording()
-            let url = await recorder.startRecording { duration, sample in
+            let url = await recorder.startRecording { duration, samples in
                 DispatchQueue.main.async { [weak self] in
-                    self?.updateRecording(duration: duration, sample: sample)
+                    self?.updateRecording(duration: duration, samples: samples)
                 }
             }
             if state == .waitingForRecordingPermission {
@@ -143,12 +143,12 @@ final class InputViewModel: ObservableObject {
 
 private extension InputViewModel {
 
-    func updateRecording(duration: Double, sample: Recorder.AudioSample) {
+    func updateRecording(duration: Double, samples: [Recorder.AudioSample]) {
         guard var recording = attachments.recording
         else { return }
         
         recording.duration = duration
-        recording.waveformSamples.append(sample)
+        recording.waveformSamples = samples
         attachments.recording = recording
     }
 
