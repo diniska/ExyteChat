@@ -125,10 +125,10 @@ extension Message: Equatable {
 
 public struct Recording: Codable, Hashable {
     public var duration: Double
-    public var waveformSamples: [CGFloat]
+    public var waveformSamples: [Recorder.AudioSample]
     public var url: URL?
 
-    public init(duration: Double = 0.0, waveformSamples: [CGFloat] = [], url: URL? = nil) {
+    public init(duration: Double = 0.0, waveformSamples: [Recorder.AudioSample] = [], url: URL? = nil) {
         self.duration = duration
         self.waveformSamples = waveformSamples
         self.url = url

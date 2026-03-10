@@ -10,15 +10,33 @@ import AVFoundation
 
 public final class Recorder {
 
+    public struct AudioSample: Codable, Equatable, Hashable {
+        public var averagePower: CGFloat
+        public var peakPower: CGFloat
+
+        public init(averagePower: CGFloat, peakPower: CGFloat) {
+            self.averagePower = averagePower
+            self.peakPower = peakPower
+        }
+    }
+    
+    public struct AudioSamplingConfiguraion {
+        public var sampleTimeInterval: TimeInterval
+
+        public init(sampleTimeInterval: TimeInterval = 1) {
+            self.sampleTimeInterval = sampleTimeInterval
+        }
+    }
+    
     // duration and waveform samples
-    public typealias ProgressHandler = (Double, [CGFloat]) -> Void
+    public typealias ProgressHandler = (Double, AudioSample) -> Void
 
     private let audioSession = AVAudioSession()
     private var audioRecorder: AVAudioRecorder?
     private var audioTimer: Timer?
 
-    private var soundSamples: [CGFloat] = []
     public var recorderSettings = RecorderSettings()
+    public var audioSamplingConfiguration = AudioSamplingConfiguraion()
 
     public var isAllowedToRecordAudio: Bool {
         audioSession.recordPermission == .granted
@@ -55,7 +73,6 @@ public final class Recorder {
             AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
         ]
 
-        soundSamples = []
         guard let fileExt = fileExtension(for: recorderSettings.audioFormatID) else{
             return nil
         }
@@ -67,10 +84,10 @@ public final class Recorder {
             audioRecorder = try AVAudioRecorder(url: recordingUrl, settings: settings)
             audioRecorder?.isMeteringEnabled = true
             audioRecorder?.record()
-            durationProgressHandler(0.0, [])
+            durationProgressHandler(0.0, AudioSample(averagePower: 0, peakPower: 0))
 
             DispatchQueue.main.async { [weak self] in
-                self?.audioTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+                self?.audioTimer = Timer.scheduledTimer(withTimeInterval: self?.audioSamplingConfiguration.sampleTimeInterval ?? 1, repeats: true) { _ in
                     self?.onTimer(durationProgressHandler)
                 }
             }
@@ -84,13 +101,16 @@ public final class Recorder {
 
     private func onTimer(_ durationProgressHandler: @escaping ProgressHandler) {
         audioRecorder?.updateMeters()
-        if let power = audioRecorder?.averagePower(forChannel: 0) {
-            // power from 0 db (max) to -60 db (roughly min)
-            let adjustedPower = 1 - (max(power, -60) / 60 * -1)
-            soundSamples.append(CGFloat(adjustedPower))
-        }
         if let time = audioRecorder?.currentTime {
-            durationProgressHandler(time, soundSamples)
+            let averagePower = audioRecorder?.averagePower(forChannel: 0) ?? 0
+            let peakPower = audioRecorder?.peakPower(forChannel: 0) ?? 0
+            durationProgressHandler(
+                time,
+                AudioSample(
+                    averagePower: adjustedPower(from: averagePower),
+                    peakPower: adjustedPower(from: peakPower)
+                )
+            )
         }
     }
 
@@ -99,6 +119,12 @@ public final class Recorder {
         audioRecorder = nil
         audioTimer?.invalidate()
         audioTimer = nil
+    }
+
+    private func adjustedPower(from averagePower: Float) -> CGFloat {
+        // Power is from 0 db (max) to -60 db (roughly min).
+        let normalizedPower = 1 - (max(averagePower, -60) / 60 * -1)
+        return CGFloat(normalizedPower)
     }
 
     private func fileExtension(for formatID: AudioFormatID) -> String? {

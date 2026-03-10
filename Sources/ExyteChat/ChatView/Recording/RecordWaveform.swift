@@ -63,7 +63,7 @@ struct RecordWaveformWithButtons: View {
 }
 
 struct RecordWaveformPlaying: View {
-    var samples: [CGFloat] // 0...1
+    var samples: [Recorder.AudioSample] // 0...1
     var progress: CGFloat
     var color: Color
     var addExtraDots: Bool
@@ -75,7 +75,7 @@ struct RecordWaveformPlaying: View {
 
     private var adjustedSamples: [CGFloat] = []
     
-    init(samples: [CGFloat],
+    init(samples: [Recorder.AudioSample],
          progress: CGFloat,
          color: Color,
          addExtraDots: Bool,
@@ -136,13 +136,13 @@ struct RecordWaveformPlaying: View {
         let temp = samples
         
         if temp.count <= maxSamples {
-            return temp
+            return temp.map(\.averagePower)
         }
 
         // use ceil to ensure that the adjusted.count will not be greater than maxSamples
         let ratio = Int(ceil( Double(temp.count) / Double(maxSamples) ))
         let adjusted = stride(from: 0, to: temp.count, by: ratio).map {
-            temp[$0]
+            temp[$0].averagePower
         }
         
         return adjusted
