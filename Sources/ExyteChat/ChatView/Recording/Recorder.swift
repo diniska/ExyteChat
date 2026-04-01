@@ -49,6 +49,7 @@ public final class Recorder {
 
     public init() {}
 
+    nonisolated(nonsending)
     public func startRecording(durationProgressHandler: @escaping ProgressHandler) async -> URL? {
         if !isAllowedToRecordAudio {
             let granted = await audioSession.requestRecordPermission()
