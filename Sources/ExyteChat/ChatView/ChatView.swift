@@ -151,9 +151,9 @@ public struct ChatView<MessageContent: View, InputViewContent: View, MenuAction:
                 replyMode: ReplyMode = .quote,
                 didSendMessage: @escaping (DraftMessage) -> Void,
                 reactionDelegate: ReactionDelegate? = nil,
-                messageBuilder: @escaping MessageBuilderClosure,
-                inputViewBuilder: @escaping InputViewBuilderClosure,
-                messageMenuAction: MessageMenuActionClosure?,
+                messageBuilder: MessageBuilderClosure? = nil,
+                inputViewBuilder: InputViewBuilderClosure? = nil,
+                messageMenuAction: MessageMenuActionClosure? = nil,
                 localization: ChatLocalization) {
         self.type = chatType
         self.didSendMessage = didSendMessage
@@ -488,7 +488,7 @@ public struct ChatView<MessageContent: View, InputViewContent: View, MenuAction:
         return availableInputs.contains(AvailableInputType.giphy)
     }
     
-    private static func createLocalization() -> ChatLocalization {
+    static func createLocalization() -> ChatLocalization {
         return ChatLocalization(
             inputPlaceholder: String(localized: "Type a message..."),
             signatureText: String(localized: "Add signature..."),
